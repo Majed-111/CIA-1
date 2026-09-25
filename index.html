@@ -21,13 +21,15 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            box-sizing: border-box;
         }
 
+        /* --- شاشة تسجيل الدخول الخارجية --- */
         .login-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -96,7 +98,7 @@
             font-weight: 600;
         }
 
-        .input-group input {
+        .input-group input, .input-group select {
             width: 100%;
             padding: 11px;
             background: #04060a;
@@ -119,6 +121,11 @@
             font-size: 13px;
             cursor: pointer;
             margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-login:hover {
+            opacity: 0.9;
         }
 
         .error-msg {
@@ -129,11 +136,17 @@
             font-weight: 600;
         }
 
+        .sync-status {
+            font-size: 11px;
+            color: var(--gold-color);
+            margin-top: 10px;
+        }
+
+        /* --- الواجهة الداخلية للنظام --- */
         #main-system {
             display: none;
             width: 100%;
-            max-width: 1000px;
-            padding: 20px;
+            max-width: 1100px;
             box-sizing: border-box;
         }
 
@@ -146,34 +159,48 @@
             border-radius: 8px;
             border: 1px solid var(--border-color);
             margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
         .btn-logout {
             background: var(--danger-color);
             color: #fff;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 9px 18px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: 700;
+            font-size: 12px;
         }
 
         .btn-delete {
-            background: #d90429;
+            background: var(--danger-color);
             color: #fff;
             border: none;
-            padding: 4px 8px;
-            border-radius: 3px;
+            padding: 5px 10px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 11px;
+            font-weight: bold;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         .leader-panel {
-            background: #0a0e16;
             border: 1px solid var(--gold-color);
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            background: #090e15;
         }
 
         .user-list-item {
@@ -181,32 +208,49 @@
             justify-content: space-between;
             align-items: center;
             background: #04060a;
-            padding: 12px;
+            padding: 12px 15px;
             margin-top: 10px;
-            border-radius: 5px;
+            border-radius: 6px;
             border: 1px solid var(--border-color);
             font-size: 13px;
         }
 
         .badge {
             padding: 3px 8px;
-            border-radius: 3px;
+            border-radius: 4px;
             font-size: 10px;
             font-weight: 700;
             background: var(--accent-color);
+            color: #fff;
         }
-        .badge-leader { background: var(--gold-color); color: #000; }
-        
-        .sync-status {
-            font-size: 11px;
+
+        .badge-leader { 
+            background: var(--gold-color); 
+            color: #000; 
+        }
+
+        .form-grid {
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 12px;
+        }
+
+        .section-title {
             color: var(--gold-color);
-            margin-top: 5px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
     </style>
 </head>
 <body>
 
-    <!-- الشاشة الخارجية -->
+    <!-- 1. شاشة تسجيل الدخول الخارجية -->
     <div class="login-card" id="login-screen">
         <div class="subtitle-top">CIA • FEDERAL DATA TERMINAL</div>
         
@@ -237,195 +281,110 @@
         <div class="error-msg" id="error-msg">⚠️ خطأ: اسم المستخدم، كلمة السر، أو الرمز غير صحيح!</div>
     </div>
 
-    <!-- الصفحة الداخلية -->
+    <!-- 2. المحتوى الداخلي للنظام -->
     <div id="main-system">
+        
+        <!-- الهيدر العلوي -->
         <div class="header-system">
             <div>
-                <h3 style="margin:0; color:var(--gold-color);">🛡️ CIA COMMAND & INTELLIGENCE CENTER</h3>
-                <small>العميل: <span id="current-user-display" style="color:var(--accent-color); font-weight:bold;"></span> | الرتبة: <span id="current-role-display" class="badge"></span></small>
+                <h3 style="margin:0; color:var(--gold-color); font-size:18px;">🛡️ CIA COMMAND & INTELLIGENCE CENTER</h3>
+                <small style="color:#94a3b8;">
+                    العميل الحالي: <span id="current-user-display" style="color:var(--accent-color); font-weight:bold;"></span> 
+                    | الرتبة: <span id="current-role-display" class="badge"></span>
+                </small>
             </div>
             <button class="btn-logout" onclick="logout()">إنهاء الجلسة وإغلاق النظام</button>
         </div>
 
-        <!-- لوحة التحكم الإدارية -->
-        <div id="leader-section" class="leader-panel" style="display: none;">
-            <h3 style="color:var(--gold-color); margin-top:0;">👑 مركز إدارة التراخيص وتعيين الحسابات السحابية</h3>
-            <p style="font-size:12px; color:#94a3b8;">أنشئ الحساب مباشرة من هنا وسوف يُرفع أونلاين فوراً ليستطيع العضو الدخول من جهازه الخاص:</p>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="input-group">
-                    <label>اسم الوكيل (Username)</label>
-                    <input type="text" id="new-username" placeholder="اسم العميل...">
+        <div class="grid-container">
+
+            <!-- لوحة التحكم الخاصة بالإدارة DIRECTOR -->
+            <div id="leader-section" class="panel-card leader-panel" style="display: none;">
+                <h3 class="section-title">👑 لوحة التحكم وإدارة الحسابات السحابية</h3>
+                <p style="font-size:12px; color:#94a3b8; margin-bottom: 20px;">
+                    يمكنك من هنا إضافة حسابات جديدة وتحديد صلاحياتها، وتحديث البيانات أونلاين فوراً لتتاح للأعضاء من أجهزتهم:
+                </p>
+                
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>اسم الوكيل (Username)</label>
+                        <input type="text" id="new-username" placeholder="اسم العميل...">
+                    </div>
+                    <div class="input-group">
+                        <label>المعرف الفدرالي (Badge ID)</label>
+                        <input type="text" id="new-id" placeholder="مثال: CIA-709">
+                    </div>
+                    <div class="input-group">
+                        <label>كلمة المرور (Passcode)</label>
+                        <input type="text" id="new-password" placeholder="كلمة المرور...">
+                    </div>
+                    <div class="input-group">
+                        <label>رمز الأمان (PIN Code)</label>
+                        <input type="text" id="new-pin" placeholder="رمز PIN من 4 أرقام...">
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label>المعرف الفدرالي (Badge ID)</label>
-                    <input type="text" id="new-id" placeholder="مثال: CIA-709">
-                </div>
-                <div class="input-group">
-                    <label>كلمة المرور (Passcode)</label>
-                    <input type="text" id="new-password" placeholder="كلمة المرور...">
-                </div>
-                <div class="input-group">
-                    <label>رمز الأمان (PIN Code)</label>
-                    <input type="text" id="new-pin" placeholder="رمز PIN من 4 أرقام...">
+
+                <button class="btn-login" style="background:var(--success-color); color:#fff; font-size: 14px;" onclick="createAccount()">➕ حفظ وإضافة الحساب أونلاين فوراً</button>
+
+                <h4 style="margin-bottom:10px; margin-top:25px; color:var(--gold-color);">📋 الحسابات المسجلة حالياً بالسحابة:</h4>
+                <div id="users-container"></div>
+            </div>
+
+            <!-- قسم المحتوى والأرشيف الداخلي -->
+            <div class="panel-card">
+                <h3 class="section-title">📂 الأرشيف الوطني للسجلات والتقارير السرية</h3>
+                <p style="font-size: 13px; color: #94a3b8; line-height: 1.6;">
+                    مرحباً بك في المنظومة الفدرالية. الاتصال بالسحابة نشط وآمن. يتم تحديث البيانات وتزامنها تلقائياً مع السيرفر الرئيسي.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 20px;">
+                    <div style="background:#04060a; padding:15px; border-radius:6px; border:1px solid var(--border-color);">
+                        <span style="color:var(--accent-color); font-weight:bold; font-size:12px;">حالة الاتصال</span>
+                        <div style="color:#fff; font-size:16px; font-weight:bold; margin-top:5px;">🌐 مشفر ومزامن</div>
+                    </div>
+                    <div style="background:#04060a; padding:15px; border-radius:6px; border:1px solid var(--border-color);">
+                        <span style="color:var(--gold-color); font-weight:bold; font-size:12px;">مستوى التشفير</span>
+                        <div style="color:#fff; font-size:16px; font-weight:bold; margin-top:5px;">🔒 AES-256 Bit</div>
+                    </div>
+                    <div style="background:#04060a; padding:15px; border-radius:6px; border:1px solid var(--border-color);">
+                        <span style="color:var(--success-color); font-weight:bold; font-size:12px;">السيرفر الرئيسي</span>
+                        <div style="color:#fff; font-size:16px; font-weight:bold; margin-top:5px;">⚡ Cloud Synchronized</div>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn-login" style="background:var(--success-color); color:#fff;" onclick="createAccount()">➕ حفظ وإضافة الحساب أونلاين فوراً</button>
-
-            <h4 style="margin-bottom:8px; margin-top:25px; color:var(--gold-color);">📋 قائمة الحسابات المضافة أونلاين:</h4>
-            <div id="users-container"></div>
         </div>
- /* ==================== اللوحة الرئيسية ==================== */
-        .main-terminal {
-            display: none;
-            width: 100%;
-            max-width: 1200px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    </div>
+
+    <!-- 3. البرمجة والربط السحابي -->
+    <script>
+        const BIN_ID = "66f30a90e41b4d34e43681a2"; 
+        const API_KEY = "$2a$10$R90O.QvF3sSskB72X2.4EuK8S8zC83yG8S2/B69O7d3bI.8c2C4s2"; 
+
+        let usersDatabase = {
+            "Karlos": { password: "admin", pin: "0000", id: "CIA-001", role: "DIRECTOR" }
+        };
+
+        // جلب البيانات من السحابة عند تحميل الصفحة
+        async function fetchCloudData() {
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { "X-Master-Key": API_KEY }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.record && Object.keys(data.record).length > 0) {
+                        usersDatabase = data.record;
+                    }
+                }
+            } catch (e) {
+                console.log("Cloud sync error");
+            }
+            document.getElementById("loading-status").innerText = "✅ متصل بالسحابة الفدرالية";
+            checkAutoLogin();
         }
 
-        header {
-            background: #04060a;
-            padding: 18px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--accent-gold);
-        }
-
-        .user-info-box {
-            font-size: 14px;
-        }
-
-        .user-name {
-            color: var(--accent-gold);
-            font-weight: bold;
-        }
-
-        .badge-role {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: bold;
-            background: var(--accent-blue);
-            color: #fff;
-            margin-right: 8px;
-        }
-
-        .btn-logout {
-            background: var(--danger-color);
-            color: #fff;
-            border: none;
-            padding: 7px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        /* ==================== شبكة المجلدات ==================== */
-        .folder-grid-panel {
-            padding: 30px;
-        }
-
-        .grid-title {
-            color: #fff;
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-
-        .folder-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 18px;
-        }
-
-        .folder-card {
-            background: #080d1a;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            cursor: pointer;
-            transition: 0.2s;
-            text-align: right;
-        }
-
-        .folder-card:hover {
-            border-color: var(--accent-blue);
-            transform: translateY(-3px);
-        }
-
-        .folder-card b {
-            display: block;
-            color: var(--accent-gold);
-            font-size: 16px;
-            margin-bottom: 6px;
-        }
-
-        .folder-card small {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        /* ==================== محتوى الأقسام الداخلية ==================== */
-        .workspace-panel {
-            display: none;
-            padding: 25px;
-        }
-
-        .btn-back {
-            background: #080d1a;
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        .btn-back:hover {
-            border-color: var(--accent-gold);
-            color: var(--accent-gold);
-        }
-
-        .panel-content {
-            background: #080d1a;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .panel-content h3 {
-            color: var(--accent-blue);
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-        }
-
-        /* جداول استعراض البيانات */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 13px;
-        }
-
-        th, td {
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            text-align: right;
-        }
-
-        th {
-            background: #04060a;
-            color: var(--accent-gold);
-        }
-
+        // حفظ البيانات في السحابة
         async function saveCloudData() {
             document.getElementById("loading-status").innerText = "⏳ جاري رفع الحساب للسحابة...";
             try {
@@ -443,6 +402,7 @@
             }
         }
 
+        // فحص تسجيل الدخول التلقائي
         function checkAutoLogin() {
             const savedUser = localStorage.getItem("active_cia_user");
             if (savedUser && usersDatabase[savedUser]) {
@@ -450,6 +410,7 @@
             }
         }
 
+        // عملية تسجيل الدخول
         function login() {
             const user = document.getElementById("login-username").value.trim();
             const pass = document.getElementById("login-password").value.trim();
@@ -468,6 +429,7 @@
             }
         }
 
+        // فتح الشاشة الداخلية
         function openMainSystem(user) {
             document.getElementById("login-screen").style.display = "none";
             document.getElementById("main-system").style.display = "block";
@@ -487,6 +449,7 @@
             }
         }
 
+        // إضافة حساب جديد
         async function createAccount() {
             const user = document.getElementById("new-username").value.trim();
             const id = document.getElementById("new-id").value.trim();
@@ -515,6 +478,7 @@
             document.getElementById("new-pin").value = "";
         }
 
+        // حذف حساب
         async function deleteAccount(username) {
             if (username === "Karlos") return alert("لا يمكنك حذف مدير النظام!");
             if (confirm(`حذف حساب (${username}) من السحابة؟`)) {
@@ -524,6 +488,7 @@
             }
         }
 
+        // عرض قائمة الحسابات للمدير
         function renderUserList() {
             const container = document.getElementById("users-container");
             container.innerHTML = "";
@@ -545,6 +510,7 @@
             }
         }
 
+        // تسجيل الخروج
         function logout() {
             localStorage.removeItem("active_cia_user");
             document.getElementById("login-screen").style.display = "block";
@@ -554,6 +520,7 @@
             document.getElementById("login-pin").value = "";
         }
 
+        // تشغيل الجلب التلقائي عند بداية التشغيل
         fetchCloudData();
     </script>
 </body>
