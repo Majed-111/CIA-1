@@ -277,38 +277,63 @@
             <div id="users-container"></div>
         </div>
 
-        <!-- المحتوى الداخلي -->
-        <div style="background: var(--card-bg); padding: 25px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <h3 style="margin-top:0; color:#fff;">📂 الأرشيف الوطني للسجلات والتقارير السرية</h3>
-            <p style="font-size: 13px; color: #94a3b8;">تم الربط بالسحابة بنجاح. أي حساب تضيفه من شاشة البرنامج يظهر للجميع فوراً.</p>
-        </div>
-    </div>
-
-    <script>
-        const BIN_ID = "66f30a90e41b4d34e43681a2"; 
-        const API_KEY = "$2a$10$R90O.QvF3sSskB72X2.4EuK8S8zC83yG8S2/B69O7d3bI.8c2C4s2"; 
-
-        let usersDatabase = {
-            "Karlos": { password: "admin", pin: "0000", id: "CIA-001", role: "DIRECTOR" }
-        };
-
-        async function fetchCloudData() {
-            try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { "X-Master-Key": API_KEY }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.record && Object.keys(data.record).length > 0) {
-                        usersDatabase = data.record;
-                    }
-                }
-            } catch (e) {
-                console.log("Cloud sync error");
-            }
-            document.getElementById("loading-status").innerText = "✅ متصل بالسحابة الفدرالية";
-            checkAutoLogin();
+       /* ==================== محتوى الأقسام الداخلية ==================== */
+        .workspace-panel {
+            display: none;
+            padding: 25px;
         }
+
+        .btn-back {
+            background: #080d1a;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .btn-back:hover {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        .panel-content {
+            background: #080d1a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel-content h3 {
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        /* جداول استعراض البيانات */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            text-align: right;
+        }
+
+        th {
+            background: #04060a;
+            color: var(--accent-gold);
+        }
+    </style>
+</head>
+<body>
 
         async function saveCloudData() {
             document.getElementById("loading-status").innerText = "⏳ جاري رفع الحساب للسحابة...";
