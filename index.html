@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة النظام الإداري | Management Terminal</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --accent-blue: #007bff;
+            --accent-glow: rgba(0, 123, 255, 0.4);
+            --border-color: #1f293d;
+            --text-color: #e5e7eb;
+            --text-muted: #9ca3af;
+            --danger-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* حاوية شاشة الدخول */
+        .auth-container {
+            background: var(--card-bg);
+            border: 1px solid var(--accent-blue);
+            box-shadow: 0 0 25px var(--accent-glow);
+            border-radius: 12px;
+            padding: 35px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .system-header {
+            margin-bottom: 25px;
+        }
+
+        .system-title {
+            color: var(--text-color);
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .system-subtitle {
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* أزرار التبويب (تسجيل الدخول / إنشاء حساب) */
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+
+        /* نماذج الإدخال */
+        .form-group {
+            text-align: right;
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 11px;
+            background: #060911;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-blue);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.9;
+        }
+
+        .form-panel {
+            display: none;
+        }
+
+        .form-panel.active {
+            display: block;
+        }
+
+        /* لوحة العرض بعد الدخول */
+        .dashboard-container {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn-logout {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- شاشة المصادقة والدخول -->
+    <div class="auth-container" id="authBox">
+        <div class="system-header">
+            <div class="system-title">لوحة التحكم الإدارية</div>
+            <div class="system-subtitle">MANAGEMENT SYSTEM TERMINAL</div>
+        </div>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('login')">تسجيل الدخول</button>
+            <button class="tab-btn" onclick="switchTab('register')">إنشاء حساب جديد</button>
+        </div>
+
+        <!-- نموذج تسجيل الدخول -->
+        <form class="form-panel active" id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>معرف المستخدم (User ID)</label>
+                <input type="text" id="loginUser" placeholder="مثال: USER-101" required>
+            </div>
+            <div class="form-group">
+                <label>رمز الأمان (PIN Code)</label>
+                <input type="password" id="loginPin" placeholder="••••" required>
+            </div>
+            <button type="submit" class="btn-submit">تسجيل الدخول للنظام</button>
+        </form>
+
+        <!-- نموذج إنشاء حساب جديد -->
+        <form class="form-panel" id="registerForm" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label>الاسم الكامل</label>
+                <input type="text" id="regName" placeholder="أدخل اسمك الكامل" required>
+            </div>
+            <div class="form-group">
+                <label>معرف جديد (User ID)</label>
+                <input type="text" id="regUser" placeholder="مثال: USER-102" required>
+            </div>
+            <div class="form-group">
+                <label>تعيين رمز الأمان (PIN)</label>
+                <input type="password" id="regPin" placeholder="••••" required>
+            </div>
+            <button type="submit" class="btn-submit">إنشاء الحساب</button>
+        </form>
+    </div>
+
+    <!-- لوحة التحكم الإدارية بعد الدخول -->
+    <div class="dashboard-container" id="dashBox">
+        <div class="dash-header">
+            <div>مرحباً بك: <strong id="userDisplay" style="color: var(--accent-blue);">-</strong></div>
+            <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+        </div>
+        <h3>قائمة البيانات المشتركة</h3>
+        <p style="color: var(--text-muted); margin-top: 10px;">هنا يتم عرض السجلات والمستندات المخزنة في قاعدة البيانات.</p>
+    </div>
+
+    <script>
+        // التبديل بين تبويب تسجيل الدخول وإنشاء حساب
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const panels = document.querySelectorAll('.form-panel');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            panels.forEach(p => p.classList.remove('active'));
+
+            if (tab === 'login') {
+                tabs[0].classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        // معالجة تسجيل الدخول
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUser').value;
+            
+            document.getElementById('userDisplay').innerText = username;
+            document.getElementById('authBox').style.display = 'none';
+            document.getElementById('dashBox').style.display = 'block';
+        }
+
+        // معالجة إنشاء حساب
+        function handleRegister(event) {
+            event.preventDefault();
+            alert('تم تسجيل الحساب بنجاح! يمكنك الآن تسجيل الدخول.');
+            switchTab('login');
+        }
+
+        // تسجيل الخروج
+        function handleLogout() {
+            document.getElementById('dashBox').style.display = 'none';
+            document.getElementById('authBox').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
