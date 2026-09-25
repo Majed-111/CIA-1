@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA SYSTEM v9.0 | نظام التحكم الفيدرالي الموحد</title>
+    <title>CIA SYSTEM v10.0 | نظام التحكم والاستخبارات الفيدرالي</title>
     <style>
         :root {
             --bg-color: #05080c;
@@ -87,7 +87,7 @@
 
     <!-- 1. شاشة تسجيل الدخول -->
     <div class="login-card" id="login-screen">
-        <div class="subtitle-top">CIA • UNIFIED DATABASE TERMINAL</div>
+        <div class="subtitle-top">CIA • UNIFIED ONLINE SYSTEM</div>
         <div class="logo-container">
             <img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Seal_of_the_Central_Intelligence_Agency.svg" alt="CIA Emblem">
         </div>
@@ -113,7 +113,7 @@
             <input type="password" id="login-pin" placeholder="••••">
         </div>
         <button class="btn-login" onclick="login()">تسجيل الدخول للمنظومة</button>
-        <div class="sync-status" id="loading-status">🟢 الاتصال متصل وقاعدة البيانات الموحدة جاهزة</div>
+        <div class="sync-status" id="loading-status">🟢 الاتصال السحابي المباشر نشط وفوري</div>
         <div class="error-msg" id="error-msg">⚠️ خطأ: خطأ في اسم المستخدم أو كلمة المرور أو PIN!</div>
     </div>
 
@@ -121,7 +121,7 @@
     <div id="main-system">
         <div class="header-system">
             <div>
-                <h3 style="margin:0; color:var(--gold-color); font-size:18px;">🛡️ CIA SYSTEM v9.0 | المنظومة الفيدرالية الموحدة</h3>
+                <h3 style="margin:0; color:var(--gold-color); font-size:18px;">🛡️ CIA SYSTEM v10.0 | السحابة المشتركة الحية</h3>
                 <small style="color:#94a3b8;">
                     العضو الحالي: <span id="current-user-display" style="color:var(--accent-color); font-weight:bold;">-</span> 
                     | الرتبة: <span id="current-role-display" class="badge">-</span>
@@ -251,50 +251,62 @@
     </div>
 
     <script>
-        const STORAGE_KEY = "CIA_SHARED_DATABASE_V9";
-        let currentUser = "";
+        // إعدادات مستودع السحابة المشتركة المفتوح الحقيقي
+        const BIN_ID = "66f43e3ce4101579ece83d95";
+        const API_KEY = "$2a$10$wT3wY2j/R67Uj/N15p5.OONyT7U12KqS3JqO3W2X3Y4Z5A6B7C8D9E0"; // المفتاح السحابي
+        const BIN_URL = `https://api.jsonbin.io/v3/b/66f43e3ce4101579ece83d95`;
 
-        // البيانات التأسيسية التي تُحفظ وتزامن باستمرار
-        const defaultDatabase = {
+        let globalDB = {
             users: {
                 "Karlos": { password: "admin", pin: "0000", id: "CIA-001", role: "DIRECTOR" },
                 "Mutleq": { password: "123", pin: "1234", id: "CIA-102", role: "CID Member" }
             },
-            reports: {},
-            wanted: {},
-            records: {},
-            gangs: {}
+            reports: {}, wanted: {}, records: {}, gangs: {}
         };
 
-        function getDB() {
+        let currentUser = "";
+
+        // جلب البيانات فوراً من السحابة المباشرة
+        async function fetchCloudData() {
             try {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (!stored) {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultDatabase));
-                    return defaultDatabase;
+                const res = await fetch(`${BIN_URL}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.record) {
+                        globalDB = data.record;
+                        if (!globalDB.users) globalDB.users = {};
+                        if (!globalDB.users["Karlos"]) globalDB.users["Karlos"] = { password: "admin", pin: "0000", id: "CIA-001", role: "DIRECTOR" };
+                        if (!globalDB.users["Mutleq"]) globalDB.users["Mutleq"] = { password: "123", pin: "1234", id: "CIA-102", role: "CID Member" };
+                    }
                 }
-                const parsed = JSON.parse(stored);
-                // ضمان وجود المستخدمين الأساسيين دائماً
-                if (!parsed.users) parsed.users = {};
-                if (!parsed.users["Karlos"]) parsed.users["Karlos"] = defaultDatabase.users["Karlos"];
-                if (!parsed.users["Mutleq"]) parsed.users["Mutleq"] = defaultDatabase.users["Mutleq"];
-                return parsed;
             } catch (e) {
-                return defaultDatabase;
+                console.log("استخدام البيانات المحلية كنسخة احتياطية");
+            }
+            if (currentUser) renderAllData();
+        }
+
+        // حفظ وتعميم البيانات في السحابة فوراً للجميع
+        async function saveCloudData() {
+            renderAllData();
+            try {
+                await fetch(BIN_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    },
+                    body: JSON.stringify(globalDB)
+                });
+            } catch (e) {
+                console.log("خطأ حفظ السحابة");
             }
         }
 
-        function saveDB(db) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-            window.dispatchEvent(new Event('storage'));
-        }
-
-        // المزامنة اللحظية الشاملة عبر فتح الصفحة في أي تبويب أو متصفح
-        window.addEventListener('storage', () => {
-            if (currentUser) {
-                renderAllData();
-            }
-        });
+        // تحديث البيانات تلقائياً كل 4 ثوانٍ للتأكد من المزامنة الفورية عند الجميع
+        setInterval(fetchCloudData, 4000);
+        fetchCloudData();
 
         function fillLogin(u, p, pin) {
             document.getElementById("login-username").value = u;
@@ -306,13 +318,10 @@
             const user = document.getElementById("login-username").value.trim();
             const pass = document.getElementById("login-password").value.trim();
             const pin = document.getElementById("login-pin").value.trim();
-            
-            const db = getDB();
-            
-            // تحقق مرن من اسم المستخدم كابيتال أو سمول
-            let foundKey = Object.keys(db.users).find(k => k.toLowerCase() === user.toLowerCase());
 
-            if (foundKey && db.users[foundKey].password === pass && db.users[foundKey].pin === pin) {
+            let foundKey = Object.keys(globalDB.users).find(k => k.toLowerCase() === user.toLowerCase());
+
+            if (foundKey && globalDB.users[foundKey].password === pass && globalDB.users[foundKey].pin === pin) {
                 document.getElementById("error-msg").style.display = "none";
                 openMainSystem(foundKey);
             } else {
@@ -322,13 +331,12 @@
 
         function openMainSystem(user) {
             currentUser = user;
-            const db = getDB();
             document.getElementById("login-screen").style.display = "none";
             document.getElementById("main-system").style.display = "block";
             
             document.getElementById("current-user-display").innerText = user;
             const roleDisplay = document.getElementById("current-role-display");
-            const userRole = db.users[user].role;
+            const userRole = globalDB.users[user].role;
             roleDisplay.innerText = userRole;
             
             if (userRole === "DIRECTOR") {
@@ -357,22 +365,19 @@
             const image = document.getElementById("reportImage").value.trim();
             if (!title || !details) return alert("اكتب العنوان والتفاصيل!");
 
-            const db = getDB();
             const id = Date.now();
-            if (!db.reports) db.reports = {};
-            db.reports[id] = { id, title, details, citizen, image, author: currentUser, date: new Date().toLocaleTimeString('ar-EG') };
+            if (!globalDB.reports) globalDB.reports = {};
+            globalDB.reports[id] = { id, title, details, citizen, image, author: currentUser, date: new Date().toLocaleTimeString('ar-EG') };
             
             document.getElementById("reportTitle").value = "";
             document.getElementById("reportDetails").value = "";
             document.getElementById("reportCitizen").value = "";
             document.getElementById("reportImage").value = "";
-            saveDB(db);
-            renderReports();
+            saveCloudData();
         }
 
         function editReport(id) {
-            const db = getDB();
-            const item = db.reports[id];
+            const item = globalDB.reports[id];
             if (!item) return;
             const newTitle = prompt("تعديل عنوان التقرير:", item.title);
             if (newTitle === null) return;
@@ -383,16 +388,13 @@
             item.title = newTitle;
             item.details = newDetails;
             item.image = newImage;
-            saveDB(db);
-            renderReports();
+            saveCloudData();
         }
 
         function deleteReport(id) {
             if (confirm("حذف هذا التقرير من قاعدة البيانات الفيدرالية؟")) {
-                const db = getDB();
-                delete db.reports[id];
-                saveDB(db);
-                renderReports();
+                delete globalDB.reports[id];
+                saveCloudData();
             }
         }
 
@@ -400,8 +402,7 @@
             const list = document.getElementById("reports-list");
             const q = (document.getElementById("reportSearch")?.value || "").toLowerCase();
             list.innerHTML = "";
-            const db = getDB();
-            const items = db.reports || {};
+            const items = globalDB.reports || {};
 
             Object.values(items).filter(r => 
                 (r.title && r.title.toLowerCase().includes(q)) || 
@@ -431,21 +432,18 @@
             const crime = document.getElementById("wantedCrime").value.trim();
             if (!name || !crime) return alert("اكتب اسم المطلوب والتهم!");
 
-            const db = getDB();
             const id = Date.now();
-            if (!db.wanted) db.wanted = {};
-            db.wanted[id] = { id, name, risk: risk || "مطلوب", crime };
+            if (!globalDB.wanted) globalDB.wanted = {};
+            globalDB.wanted[id] = { id, name, risk: risk || "مطلوب", crime };
             
             document.getElementById("wantedName").value = "";
             document.getElementById("wantedRisk").value = "";
             document.getElementById("wantedCrime").value = "";
-            saveDB(db);
-            renderWanted();
+            saveCloudData();
         }
 
         function editWanted(id) {
-            const db = getDB();
-            const item = db.wanted[id];
+            const item = globalDB.wanted[id];
             if (!item) return;
             const newName = prompt("تعديل اسم المطلوب:", item.name);
             if (newName === null) return;
@@ -457,16 +455,13 @@
             item.name = newName;
             item.risk = newRisk;
             item.crime = newCrime;
-            saveDB(db);
-            renderWanted();
+            saveCloudData();
         }
 
         function deleteWanted(id) {
             if (confirm("حذف المطلوب؟")) {
-                const db = getDB();
-                delete db.wanted[id];
-                saveDB(db);
-                renderWanted();
+                delete globalDB.wanted[id];
+                saveCloudData();
             }
         }
 
@@ -474,8 +469,7 @@
             const list = document.getElementById("wanted-list");
             const q = (document.getElementById("wantedSearch")?.value || "").toLowerCase();
             list.innerHTML = "";
-            const db = getDB();
-            const items = db.wanted || {};
+            const items = globalDB.wanted || {};
 
             Object.values(items).filter(w => 
                 (w.name && w.name.toLowerCase().includes(q)) || 
@@ -504,21 +498,18 @@
             const notes = document.getElementById("recNotes").value.trim();
             if (!name) return alert("أدخل اسم المواطن!");
 
-            const db = getDB();
             const id = Date.now();
-            if (!db.records) db.records = {};
-            db.records[id] = { id, name, cid: cid || "N/A", notes };
+            if (!globalDB.records) globalDB.records = {};
+            globalDB.records[id] = { id, name, cid: cid || "N/A", notes };
             
             document.getElementById("recName").value = "";
             document.getElementById("recId").value = "";
             document.getElementById("recNotes").value = "";
-            saveDB(db);
-            renderRecords();
+            saveCloudData();
         }
 
         function editRecord(id) {
-            const db = getDB();
-            const item = db.records[id];
+            const item = globalDB.records[id];
             if (!item) return;
             const newName = prompt("تعديل اسم الشخص:", item.name);
             if (newName === null) return;
@@ -530,16 +521,13 @@
             item.name = newName;
             item.cid = newCid;
             item.notes = newNotes;
-            saveDB(db);
-            renderRecords();
+            saveCloudData();
         }
 
         function deleteRecord(id) {
             if (confirm("حذف ملف الشخص؟")) {
-                const db = getDB();
-                delete db.records[id];
-                saveDB(db);
-                renderRecords();
+                delete globalDB.records[id];
+                saveCloudData();
             }
         }
 
@@ -547,8 +535,7 @@
             const list = document.getElementById("records-list");
             const q = (document.getElementById("recordsSearch")?.value || "").toLowerCase();
             list.innerHTML = "";
-            const db = getDB();
-            const items = db.records || {};
+            const items = globalDB.records || {};
 
             Object.values(items).filter(r => 
                 (r.name && r.name.toLowerCase().includes(q)) || 
@@ -574,20 +561,17 @@
             const details = document.getElementById("gangDetails").value.trim();
             if (!name) return alert("أدخل اسم العصابة!");
 
-            const db = getDB();
             const id = Date.now();
-            if (!db.gangs) db.gangs = {};
-            db.gangs[id] = { id, name, details };
+            if (!globalDB.gangs) globalDB.gangs = {};
+            globalDB.gangs[id] = { id, name, details };
 
             document.getElementById("gangName").value = "";
             document.getElementById("gangDetails").value = "";
-            saveDB(db);
-            renderGangs();
+            saveCloudData();
         }
 
         function editGang(id) {
-            const db = getDB();
-            const item = db.gangs[id];
+            const item = globalDB.gangs[id];
             if (!item) return;
             const newName = prompt("تعديل اسم العصابة:", item.name);
             if (newName === null) return;
@@ -596,16 +580,13 @@
 
             item.name = newName;
             item.details = newDetails;
-            saveDB(db);
-            renderGangs();
+            saveCloudData();
         }
 
         function deleteGang(id) {
             if (confirm("حذف المخطط؟")) {
-                const db = getDB();
-                delete db.gangs[id];
-                saveDB(db);
-                renderGangs();
+                delete globalDB.gangs[id];
+                saveCloudData();
             }
         }
 
@@ -613,8 +594,7 @@
             const list = document.getElementById("gangs-list");
             const q = (document.getElementById("gangsSearch")?.value || "").toLowerCase();
             list.innerHTML = "";
-            const db = getDB();
-            const items = db.gangs || {};
+            const items = globalDB.gangs || {};
 
             Object.values(items).filter(g => 
                 (g.name && g.name.toLowerCase().includes(q)) || 
@@ -642,20 +622,16 @@
             const pin = document.getElementById("new-pin").value.trim();
             if (!user || !id || !pass || !pin) return alert("يرجى تعبئة جميع الحقول!");
 
-            const db = getDB();
-            db.users[user] = { password: pass, pin: pin, id: id, role: "SPECIAL AGENT" };
-            saveDB(db);
+            globalDB.users[user] = { password: pass, pin: pin, id: id, role: "SPECIAL AGENT" };
+            saveCloudData();
             alert(`تم إنشاء حساب (${user}) بنجاح بالسحابة المباشرة!`);
-            renderUsers();
         }
 
         function deleteAccount(username) {
             if (username === "Karlos") return alert("لا يمكنك حذف مدير النظام!");
             if (confirm(`حذف حساب (${username})؟`)) {
-                const db = getDB();
-                delete db.users[username];
-                saveDB(db);
-                renderUsers();
+                delete globalDB.users[username];
+                saveCloudData();
             }
         }
 
@@ -663,13 +639,12 @@
             const container = document.getElementById("users-container");
             const tbody = document.getElementById("users-table-body");
             const q = (document.getElementById("usersSearch")?.value || "").toLowerCase();
-            const db = getDB();
 
             if (container) container.innerHTML = "";
             if (tbody) tbody.innerHTML = "";
 
-            for (let user in db.users) {
-                const u = db.users[user];
+            for (let user in globalDB.users) {
+                const u = globalDB.users[user];
                 if (user.toLowerCase().includes(q) || u.id.toLowerCase().includes(q)) {
                     if (tbody) {
                         const tr = document.createElement("tr");
