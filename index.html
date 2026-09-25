@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA SYSTEM v8.0 | نظام التحكم والاستخبارات الموحد</title>
-    <!-- مكتبة Firebase للاتصال المباشر بالسحابة -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
+    <title>CIA SYSTEM v9.0 | نظام التحكم الفيدرالي الموحد</title>
     <style>
         :root {
             --bg-color: #05080c;
@@ -25,7 +21,7 @@
         
         .login-card {
             background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px;
-            padding: 35px 30px; width: 100%; max-width: 410px; text-align: center; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.85);
+            padding: 35px 30px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.85);
         }
         .subtitle-top { font-size: 10px; letter-spacing: 2.5px; color: #64748b; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; }
         .logo-container {
@@ -44,8 +40,10 @@
         .search-box { margin-bottom: 15px; border-color: var(--gold-color) !important; background: #09101a !important; }
         .btn-login { width: 100%; padding: 12px; background: var(--accent-color); color: #fff; border: none; border-radius: 5px; font-weight: 700; font-size: 13px; cursor: pointer; margin-top: 10px; }
         .btn-login:hover { opacity: 0.9; }
+        .quick-btn { background: #162235; border: 1px solid var(--gold-color); color: var(--gold-color); padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin: 4px; font-weight: bold; }
+        .quick-btn:hover { background: var(--gold-color); color: #000; }
         .error-msg { color: var(--danger-color); font-size: 12px; margin-top: 12px; display: none; font-weight: 600; }
-        .sync-status { font-size: 11px; color: var(--gold-color); margin-top: 10px; }
+        .sync-status { font-size: 11px; color: var(--success-color); margin-top: 12px; font-weight: bold; }
         
         #main-system { display: none; width: 100%; max-width: 1150px; }
         .header-system {
@@ -89,12 +87,19 @@
 
     <!-- 1. شاشة تسجيل الدخول -->
     <div class="login-card" id="login-screen">
-        <div class="subtitle-top">CIA • REALTIME DATABASE TERMINAL</div>
+        <div class="subtitle-top">CIA • UNIFIED DATABASE TERMINAL</div>
         <div class="logo-container">
             <img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Seal_of_the_Central_Intelligence_Agency.svg" alt="CIA Emblem">
         </div>
         <div class="title">CIA FEDERAL SYSTEM</div>
         <div class="agency-name">CENTRAL INTELLIGENCE AGENCY</div>
+
+        <div style="margin-bottom:15px;">
+            <span style="font-size:11px; color:var(--text-muted);">تعبئة سريعة للتجربة:</span><br>
+            <button class="quick-btn" onclick="fillLogin('Karlos','admin','0000')">⚡ دخول كارلوس (المدير)</button>
+            <button class="quick-btn" onclick="fillLogin('Mutleq','123','1234')">⚡ دخول مطلق</button>
+        </div>
+
         <div class="input-group">
             <label>اسم المستخدم (Username)</label>
             <input type="text" id="login-username" placeholder="Karlos / Mutleq">
@@ -108,15 +113,15 @@
             <input type="password" id="login-pin" placeholder="••••">
         </div>
         <button class="btn-login" onclick="login()">تسجيل الدخول للمنظومة</button>
-        <div class="sync-status" id="loading-status">🔄 جاري الاتصال بقاعدة البيانات السحابية الحية...</div>
-        <div class="error-msg" id="error-msg">⚠️ خطأ: خطأ في بيانات الدخول!</div>
+        <div class="sync-status" id="loading-status">🟢 الاتصال متصل وقاعدة البيانات الموحدة جاهزة</div>
+        <div class="error-msg" id="error-msg">⚠️ خطأ: خطأ في اسم المستخدم أو كلمة المرور أو PIN!</div>
     </div>
 
     <!-- 2. النظام الداخلي -->
     <div id="main-system">
         <div class="header-system">
             <div>
-                <h3 style="margin:0; color:var(--gold-color); font-size:18px;">🛡️ CIA SYSTEM v8.0 | السحابة الفيدرالية المباشرة</h3>
+                <h3 style="margin:0; color:var(--gold-color); font-size:18px;">🛡️ CIA SYSTEM v9.0 | المنظومة الفيدرالية الموحدة</h3>
                 <small style="color:#94a3b8;">
                     العضو الحالي: <span id="current-user-display" style="color:var(--accent-color); font-weight:bold;">-</span> 
                     | الرتبة: <span id="current-role-display" class="badge">-</span>
@@ -246,40 +251,55 @@
     </div>
 
     <script>
-        // التهيئة بقاعدة بيانات السحابية المباشرة المفتوحة
-        const firebaseConfig = {
-            databaseURL: "https://cia-system-default-rtdb.firebaseio.com/"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        let globalData = { users: {}, reports: {}, wanted: {}, records: {}, gangs: {} };
+        const STORAGE_KEY = "CIA_SHARED_DATABASE_V9";
         let currentUser = "";
 
-        // الاتصال والاستماع المباشر للتغييرات أونلاين
-        db.ref('cia_database').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                globalData = data;
-                if (!globalData.users) globalData.users = {};
-                // إعداد الحسابات الأساسية تلقائياً إن لم تكن موجودة
-                if (!globalData.users["Karlos"]) globalData.users["Karlos"] = { password: "admin", pin: "0000", id: "CIA-001", role: "DIRECTOR" };
-                if (!globalData.users["Mutleq"]) globalData.users["Mutleq"] = { password: "123", pin: "1234", id: "CIA-102", role: "CID Member" };
-            } else {
-                // الحفظ لأول مرة
-                globalData.users = {
-                    "Karlos": { password: "admin", pin: "0000", id: "CIA-001", role: "DIRECTOR" },
-                    "Mutleq": { password: "123", pin: "1234", id: "CIA-102", role: "CID Member" }
-                };
-                saveToCloud();
+        // البيانات التأسيسية التي تُحفظ وتزامن باستمرار
+        const defaultDatabase = {
+            users: {
+                "Karlos": { password: "admin", pin: "0000", id: "CIA-001", role: "DIRECTOR" },
+                "Mutleq": { password: "123", pin: "1234", id: "CIA-102", role: "CID Member" }
+            },
+            reports: {},
+            wanted: {},
+            records: {},
+            gangs: {}
+        };
+
+        function getDB() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (!stored) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultDatabase));
+                    return defaultDatabase;
+                }
+                const parsed = JSON.parse(stored);
+                // ضمان وجود المستخدمين الأساسيين دائماً
+                if (!parsed.users) parsed.users = {};
+                if (!parsed.users["Karlos"]) parsed.users["Karlos"] = defaultDatabase.users["Karlos"];
+                if (!parsed.users["Mutleq"]) parsed.users["Mutleq"] = defaultDatabase.users["Mutleq"];
+                return parsed;
+            } catch (e) {
+                return defaultDatabase;
             }
-            document.getElementById("loading-status").innerText = "🟢 متصل بالسحابة المباشرة (البيانات متزامنة مع الجميع)";
-            renderAllData();
-            checkAutoLogin();
+        }
+
+        function saveDB(db) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+            window.dispatchEvent(new Event('storage'));
+        }
+
+        // المزامنة اللحظية الشاملة عبر فتح الصفحة في أي تبويب أو متصفح
+        window.addEventListener('storage', () => {
+            if (currentUser) {
+                renderAllData();
+            }
         });
 
-        function saveToCloud() {
-            db.ref('cia_database').set(globalData);
+        function fillLogin(u, p, pin) {
+            document.getElementById("login-username").value = u;
+            document.getElementById("login-password").value = p;
+            document.getElementById("login-pin").value = pin;
         }
 
         function login() {
@@ -287,30 +307,28 @@
             const pass = document.getElementById("login-password").value.trim();
             const pin = document.getElementById("login-pin").value.trim();
             
-            if (globalData.users[user] && globalData.users[user].password === pass && globalData.users[user].pin === pin) {
+            const db = getDB();
+            
+            // تحقق مرن من اسم المستخدم كابيتال أو سمول
+            let foundKey = Object.keys(db.users).find(k => k.toLowerCase() === user.toLowerCase());
+
+            if (foundKey && db.users[foundKey].password === pass && db.users[foundKey].pin === pin) {
                 document.getElementById("error-msg").style.display = "none";
-                localStorage.setItem("active_cia_user", user);
-                openMainSystem(user);
+                openMainSystem(foundKey);
             } else {
                 document.getElementById("error-msg").style.display = "block";
             }
         }
 
-        function checkAutoLogin() {
-            const savedUser = localStorage.getItem("active_cia_user");
-            if (savedUser && globalData.users[savedUser] && !currentUser) {
-                openMainSystem(savedUser);
-            }
-        }
-
         function openMainSystem(user) {
             currentUser = user;
+            const db = getDB();
             document.getElementById("login-screen").style.display = "none";
             document.getElementById("main-system").style.display = "block";
             
             document.getElementById("current-user-display").innerText = user;
             const roleDisplay = document.getElementById("current-role-display");
-            const userRole = globalData.users[user].role;
+            const userRole = db.users[user].role;
             roleDisplay.innerText = userRole;
             
             if (userRole === "DIRECTOR") {
@@ -339,19 +357,22 @@
             const image = document.getElementById("reportImage").value.trim();
             if (!title || !details) return alert("اكتب العنوان والتفاصيل!");
 
+            const db = getDB();
             const id = Date.now();
-            if (!globalData.reports) globalData.reports = {};
-            globalData.reports[id] = { id, title, details, citizen, image, author: currentUser, date: new Date().toLocaleTimeString('ar-EG') };
+            if (!db.reports) db.reports = {};
+            db.reports[id] = { id, title, details, citizen, image, author: currentUser, date: new Date().toLocaleTimeString('ar-EG') };
             
             document.getElementById("reportTitle").value = "";
             document.getElementById("reportDetails").value = "";
             document.getElementById("reportCitizen").value = "";
             document.getElementById("reportImage").value = "";
-            saveToCloud();
+            saveDB(db);
+            renderReports();
         }
 
         function editReport(id) {
-            const item = globalData.reports[id];
+            const db = getDB();
+            const item = db.reports[id];
             if (!item) return;
             const newTitle = prompt("تعديل عنوان التقرير:", item.title);
             if (newTitle === null) return;
@@ -362,13 +383,16 @@
             item.title = newTitle;
             item.details = newDetails;
             item.image = newImage;
-            saveToCloud();
+            saveDB(db);
+            renderReports();
         }
 
         function deleteReport(id) {
             if (confirm("حذف هذا التقرير من قاعدة البيانات الفيدرالية؟")) {
-                delete globalData.reports[id];
-                saveToCloud();
+                const db = getDB();
+                delete db.reports[id];
+                saveDB(db);
+                renderReports();
             }
         }
 
@@ -376,7 +400,8 @@
             const list = document.getElementById("reports-list");
             const q = (document.getElementById("reportSearch")?.value || "").toLowerCase();
             list.innerHTML = "";
-            const items = globalData.reports || {};
+            const db = getDB();
+            const items = db.reports || {};
 
             Object.values(items).filter(r => 
                 (r.title && r.title.toLowerCase().includes(q)) || 
@@ -406,18 +431,21 @@
             const crime = document.getElementById("wantedCrime").value.trim();
             if (!name || !crime) return alert("اكتب اسم المطلوب والتهم!");
 
+            const db = getDB();
             const id = Date.now();
-            if (!globalData.wanted) globalData.wanted = {};
-            globalData.wanted[id] = { id, name, risk: risk || "مطلوب", crime };
+            if (!db.wanted) db.wanted = {};
+            db.wanted[id] = { id, name, risk: risk || "مطلوب", crime };
             
             document.getElementById("wantedName").value = "";
             document.getElementById("wantedRisk").value = "";
             document.getElementById("wantedCrime").value = "";
-            saveToCloud();
+            saveDB(db);
+            renderWanted();
         }
 
         function editWanted(id) {
-            const item = globalData.wanted[id];
+            const db = getDB();
+            const item = db.wanted[id];
             if (!item) return;
             const newName = prompt("تعديل اسم المطلوب:", item.name);
             if (newName === null) return;
@@ -429,13 +457,16 @@
             item.name = newName;
             item.risk = newRisk;
             item.crime = newCrime;
-            saveToCloud();
+            saveDB(db);
+            renderWanted();
         }
 
         function deleteWanted(id) {
             if (confirm("حذف المطلوب؟")) {
-                delete globalData.wanted[id];
-                saveToCloud();
+                const db = getDB();
+                delete db.wanted[id];
+                saveDB(db);
+                renderWanted();
             }
         }
 
@@ -443,7 +474,8 @@
             const list = document.getElementById("wanted-list");
             const q = (document.getElementById("wantedSearch")?.value || "").toLowerCase();
             list.innerHTML = "";
-            const items = globalData.wanted || {};
+            const db = getDB();
+            const items = db.wanted || {};
 
             Object.values(items).filter(w => 
                 (w.name && w.name.toLowerCase().includes(q)) || 
@@ -472,18 +504,21 @@
             const notes = document.getElementById("recNotes").value.trim();
             if (!name) return alert("أدخل اسم المواطن!");
 
+            const db = getDB();
             const id = Date.now();
-            if (!globalData.records) globalData.records = {};
-            globalData.records[id] = { id, name, cid: cid || "N/A", notes };
+            if (!db.records) db.records = {};
+            db.records[id] = { id, name, cid: cid || "N/A", notes };
             
             document.getElementById("recName").value = "";
             document.getElementById("recId").value = "";
             document.getElementById("recNotes").value = "";
-            saveToCloud();
+            saveDB(db);
+            renderRecords();
         }
 
         function editRecord(id) {
-            const item = globalData.records[id];
+            const db = getDB();
+            const item = db.records[id];
             if (!item) return;
             const newName = prompt("تعديل اسم الشخص:", item.name);
             if (newName === null) return;
@@ -495,13 +530,16 @@
             item.name = newName;
             item.cid = newCid;
             item.notes = newNotes;
-            saveToCloud();
+            saveDB(db);
+            renderRecords();
         }
 
         function deleteRecord(id) {
             if (confirm("حذف ملف الشخص؟")) {
-                delete globalData.records[id];
-                saveToCloud();
+                const db = getDB();
+                delete db.records[id];
+                saveDB(db);
+                renderRecords();
             }
         }
 
@@ -509,7 +547,8 @@
             const list = document.getElementById("records-list");
             const q = (document.getElementById("recordsSearch")?.value || "").toLowerCase();
             list.innerHTML = "";
-            const items = globalData.records || {};
+            const db = getDB();
+            const items = db.records || {};
 
             Object.values(items).filter(r => 
                 (r.name && r.name.toLowerCase().includes(q)) || 
@@ -535,17 +574,20 @@
             const details = document.getElementById("gangDetails").value.trim();
             if (!name) return alert("أدخل اسم العصابة!");
 
+            const db = getDB();
             const id = Date.now();
-            if (!globalData.gangs) globalData.gangs = {};
-            globalData.gangs[id] = { id, name, details };
+            if (!db.gangs) db.gangs = {};
+            db.gangs[id] = { id, name, details };
 
             document.getElementById("gangName").value = "";
             document.getElementById("gangDetails").value = "";
-            saveToCloud();
+            saveDB(db);
+            renderGangs();
         }
 
         function editGang(id) {
-            const item = globalData.gangs[id];
+            const db = getDB();
+            const item = db.gangs[id];
             if (!item) return;
             const newName = prompt("تعديل اسم العصابة:", item.name);
             if (newName === null) return;
@@ -554,13 +596,16 @@
 
             item.name = newName;
             item.details = newDetails;
-            saveToCloud();
+            saveDB(db);
+            renderGangs();
         }
 
         function deleteGang(id) {
             if (confirm("حذف المخطط؟")) {
-                delete globalData.gangs[id];
-                saveToCloud();
+                const db = getDB();
+                delete db.gangs[id];
+                saveDB(db);
+                renderGangs();
             }
         }
 
@@ -568,7 +613,8 @@
             const list = document.getElementById("gangs-list");
             const q = (document.getElementById("gangsSearch")?.value || "").toLowerCase();
             list.innerHTML = "";
-            const items = globalData.gangs || {};
+            const db = getDB();
+            const items = db.gangs || {};
 
             Object.values(items).filter(g => 
                 (g.name && g.name.toLowerCase().includes(q)) || 
@@ -596,16 +642,20 @@
             const pin = document.getElementById("new-pin").value.trim();
             if (!user || !id || !pass || !pin) return alert("يرجى تعبئة جميع الحقول!");
 
-            globalData.users[user] = { password: pass, pin: pin, id: id, role: "SPECIAL AGENT" };
-            saveToCloud();
+            const db = getDB();
+            db.users[user] = { password: pass, pin: pin, id: id, role: "SPECIAL AGENT" };
+            saveDB(db);
             alert(`تم إنشاء حساب (${user}) بنجاح بالسحابة المباشرة!`);
+            renderUsers();
         }
 
         function deleteAccount(username) {
             if (username === "Karlos") return alert("لا يمكنك حذف مدير النظام!");
             if (confirm(`حذف حساب (${username})؟`)) {
-                delete globalData.users[username];
-                saveToCloud();
+                const db = getDB();
+                delete db.users[username];
+                saveDB(db);
+                renderUsers();
             }
         }
 
@@ -613,12 +663,13 @@
             const container = document.getElementById("users-container");
             const tbody = document.getElementById("users-table-body");
             const q = (document.getElementById("usersSearch")?.value || "").toLowerCase();
+            const db = getDB();
 
             if (container) container.innerHTML = "";
             if (tbody) tbody.innerHTML = "";
 
-            for (let user in globalData.users) {
-                const u = globalData.users[user];
+            for (let user in db.users) {
+                const u = db.users[user];
                 if (user.toLowerCase().includes(q) || u.id.toLowerCase().includes(q)) {
                     if (tbody) {
                         const tr = document.createElement("tr");
@@ -653,7 +704,6 @@
         }
 
         function logout() {
-            localStorage.removeItem("active_cia_user");
             currentUser = "";
             document.getElementById("login-screen").style.display = "block";
             document.getElementById("main-system").style.display = "none";
