@@ -276,8 +276,102 @@
             <h4 style="margin-bottom:8px; margin-top:25px; color:var(--gold-color);">📋 قائمة الحسابات المضافة أونلاين:</h4>
             <div id="users-container"></div>
         </div>
+ /* ==================== اللوحة الرئيسية ==================== */
+        .main-terminal {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
 
-       /* ==================== محتوى الأقسام الداخلية ==================== */
+        header {
+            background: #04060a;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent-gold);
+        }
+
+        .user-info-box {
+            font-size: 14px;
+        }
+
+        .user-name {
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        .badge-role {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            background: var(--accent-blue);
+            color: #fff;
+            margin-right: 8px;
+        }
+
+        .btn-logout {
+            background: var(--danger-color);
+            color: #fff;
+            border: none;
+            padding: 7px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* ==================== شبكة المجلدات ==================== */
+        .folder-grid-panel {
+            padding: 30px;
+        }
+
+        .grid-title {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+        }
+
+        .folder-card {
+            background: #080d1a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: right;
+        }
+
+        .folder-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-3px);
+        }
+
+        .folder-card b {
+            display: block;
+            color: var(--accent-gold);
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .folder-card small {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* ==================== محتوى الأقسام الداخلية ==================== */
         .workspace-panel {
             display: none;
             padding: 25px;
@@ -334,7 +428,6 @@
     </style>
 </head>
 <body>
-
         async function saveCloudData() {
             document.getElementById("loading-status").innerText = "⏳ جاري رفع الحساب للسحابة...";
             try {
